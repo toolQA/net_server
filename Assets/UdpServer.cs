@@ -9,13 +9,18 @@ public class UdpServer : MonoBehaviour
     private Socket socket = null;
     private IPEndPoint serverEP = null;
     private EndPoint clientEP = null;
+    [SerializeField]
     private string m_ip = "127.0.0.1";
+    [SerializeField]
     private int port = 8080;
     private Thread socketThread = null;
     private bool isRunning = false;
 
     byte[] recvData = new byte[1024];
     byte[] sendData = new byte[1024];
+
+    public SocketType socketType = SocketType.Dgram;
+    public AddressFamily addressFamily = AddressFamily.InterNetwork;
 
     public void Init(string selfIp, ToolDelegate.String _recvCB)
     {
@@ -28,18 +33,22 @@ public class UdpServer : MonoBehaviour
 
         serverEP = new IPEndPoint(IPAddress.Parse(m_ip), port);
         clientEP = (EndPoint)(new IPEndPoint(IPAddress.Any, 0));
-        socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        //在服务器端创建一个负责监听ip和端口号的socket
+        socket = new Socket(addressFamily, socketType, ProtocolType.Udp);
+        //绑定端口号
         socket.Bind(serverEP);
 
+        //创建监听线程
         socketThread = new Thread(new ThreadStart(Receive));
+        socketThread.IsBackground = true;
         socketThread.Start();
 
         isRunning = true;
 
-        Invoke("【服务器启动】 " + m_ip);
+        Invoke("【UDP服务器启动】 " + m_ip + ":" + port.ToString());
     }
 
-    void Send(string info)
+    public void Send(string info)
     {
         try
         {
@@ -66,10 +75,15 @@ public class UdpServer : MonoBehaviour
                 string info = System.Text.Encoding.UTF8.GetString(recvData, 0, len);
 
                 Invoke("【接收 " + clientEP.ToString() + "】 " + info);
+
+                if (info == "init")
+                {
+                    Send("1");
+                }
             }
             catch (System.Exception e)
             {
-                Debug.LogWarning("receive " + e.Message);
+                Debug.LogWarning(e.Message);
             }
         }
     }
