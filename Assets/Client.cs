@@ -6,24 +6,31 @@ using UnityEngine;
 [Serializable]
 public class Client
 {
-    public string address = "";
-    public int port = 0;
+    public string ip = "";
 
     byte[] sendData = new byte[1024];
     byte[] recvData = new byte[1024];
-    Thread recvMsgThread = null;
+    public Thread recvMsgThread = null;
     Socket clientSocket = null;
     ToolDelegate.String cb_recv = null;
+
+
+    public bool isFinished = false;
+
 
     public Client(Socket _clientSocket, ToolDelegate.String recvCB)
     {
         clientSocket = _clientSocket;
         cb_recv = recvCB;
+        ip = clientSocket.RemoteEndPoint.ToString();
+
+        Debug.LogWarning(ip);
 
         recvMsgThread = new Thread(new ThreadStart(Receive));
-        recvMsgThread.IsBackground = true;
+        //recvMsgThread.IsBackground = true;
         recvMsgThread.Start();
     }
+
 
     public void Send(string info)
     {
@@ -35,36 +42,46 @@ public class Client
         {
             sendData = System.Text.Encoding.UTF8.GetBytes(info);
             clientSocket.Send(sendData);
-            Invoke("【发送" + clientSocket.RemoteEndPoint.ToString() + "】" + info);
+            Invoke("【发送" + ip + "】" + info);
         }
         catch (Exception e)
         {
-            Debug.LogError("send " + clientSocket.RemoteEndPoint.ToString() + " " + e.Message);
+            Debug.LogError("send " + ip + " " + e.Message);
         }
     }
 
     private void Receive()
     {
-        while (true)
+        while (!isFinished)
         {
             try
             {
+                if (!clientSocket.Connected)
+                {
+                    continue;
+                }
+                if (clientSocket.Available <= 0)
+                {
+                    continue;
+                }
                 int len = clientSocket.Receive(recvData);
                 if (len > 0)
                 {
                     string info = System.Text.Encoding.UTF8.GetString(recvData, 0, len);
-                    Invoke("【接收" + clientSocket.RemoteEndPoint.ToString() + "】" + info);
+                    Invoke("【接收" + ip + "】" + info);
                     if (info == "init")
                     {
                         Send("1");
                     }
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                Debug.LogError("receive " + clientSocket.RemoteEndPoint.ToString() + " " + e.Message);
+                Debug.LogError("receive " + ip + " " + e.ToString());
             }
         }
+
+        Debug.Log("断开连接 " + ip);
     }
 
     void Invoke(string info)
@@ -72,5 +89,21 @@ public class Client
         Debug.Log(info);
 
         cb_recv?.Invoke(info);
+    }
+
+    public void Quit()
+    {
+        isFinished = true;
+        recvMsgThread = null;
+        if (clientSocket != null)
+        {
+            if (clientSocket.Connected)
+            {
+                clientSocket.Shutdown(SocketShutdown.Both);
+                clientSocket.Disconnect(false);
+            }
+            clientSocket.Close();
+            clientSocket = null;
+        }
     }
 }

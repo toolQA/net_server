@@ -34,7 +34,7 @@ public class TcpServer_One : MonoBehaviour
 
 
         connectThread = new Thread(new ThreadStart(Receive));
-        connectThread.IsBackground = true;
+        //connectThread.IsBackground = true;
         connectThread.Start();
 
         Invoke("【TCP服务器启动】 " + serverEP.ToString());
@@ -98,6 +98,12 @@ public class TcpServer_One : MonoBehaviour
 
     public void Quit()
     {
+        if (connectThread != null)
+        {
+            connectThread.Interrupt();
+            connectThread.Abort();
+        }
+
         if (serverSocket != null)
         {
             serverSocket.Close();
@@ -108,12 +114,6 @@ public class TcpServer_One : MonoBehaviour
         {
             clientSocket.Close();
             clientSocket = null;
-        }
-
-        if (connectThread != null)
-        {
-            connectThread.Interrupt();
-            connectThread.Abort();
         }
     }
 }

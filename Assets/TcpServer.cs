@@ -17,15 +17,16 @@ public class TcpServer : MonoBehaviour
     public string m_ip = "127.0.0.1";
     public int m_port = 8080;
 
-    public bool isRunning = false;
-
     public int clientNum = 10;
-    public Dictionary<string, Client> dic_client;
+
+    public List<Client> cs;
 
     Thread clientConnectedThread = null;
 
     public SocketType socketType = SocketType.Stream;
     public AddressFamily addressFamily = AddressFamily.InterNetwork;
+
+    public bool isFinished = false;
 
 
     public void Init(string selfIp, ToolDelegate.String _recvCB)
@@ -46,38 +47,41 @@ public class TcpServer : MonoBehaviour
         //设置监听，最大同时连接100台
         serverSocket.Listen(clientNum);
 
-        dic_client = new Dictionary<string, Client>();
+        cs = new List<Client>();
+        cs.Capacity = clientNum;
 
         //创建监听线程
         clientConnectedThread = new Thread(new ThreadStart(Receive));
-        clientConnectedThread.IsBackground = true;
+        //clientConnectedThread.IsBackground = true;
         clientConnectedThread.Start();
-
-        isRunning = true;
 
         Invoke("【TCP服务器启动】 " + serverEP.ToString());
     }
 
     private void Receive()
     {
-        while (true)
+        while (!isFinished)
         {
             try
             {
-                Socket clientSocket = serverSocket.Accept();
-
-                string clientIP = clientSocket.RemoteEndPoint.ToString();
-
-                Client client = new Client(clientSocket, recvCB);
-
-                if (dic_client.ContainsKey(clientIP))
+                if (cs.Count >= clientNum)
                 {
-                    dic_client.Add(clientIP, client);
+                    Debug.LogError("已达连接上限");
+                    continue;
                 }
+
+                //同步Accept，当关闭的时候会出现阻塞操作被中断的异常SocketException
+                Socket clientSocket = serverSocket.Accept();//这里还是有问题，晚点换成异步试下
+
+                cs.Add(new Client(clientSocket, recvCB));
+            }
+            catch (SocketException e)
+            {
+                Debug.LogError("////" + e.ErrorCode);
             }
             catch (Exception e)
             {
-                Debug.LogError(e.Message);
+                Debug.LogError(e.ToString());
             }
         }   
     }
@@ -94,13 +98,59 @@ public class TcpServer : MonoBehaviour
 
     public void Quit()
     {
-        if (isRunning)
+        isFinished = true;
+        clientConnectedThread = null;
+
+        if (serverSocket != null)
         {
             serverSocket.Close();
-            clientConnectedThread.Interrupt();
-            clientConnectedThread.Abort();
+            serverSocket = null;
+        }
 
-            isRunning = false;
+        if (cs.Count > 0)
+        {
+            for (int i = 0; i < cs.Count; i++)
+            {
+                cs[i].Quit();
+            }
+            cs.Clear();
+        }
+        cs = null;
+    }
+
+    private void Update()
+    {
+        if (serverSocket != null)
+        {
+            Debug.Log(serverSocket.Available);
+            Debug.Log(serverSocket.AddressFamily);
+            Debug.Log(serverSocket.Blocking);
+            Debug.Log(serverSocket.Connected);
+            Debug.Log(serverSocket.DontFragment);
+
+            Debug.Log(serverSocket.ExclusiveAddressUse);
+            Debug.Log(serverSocket.Handle);
+            Debug.Log(serverSocket.IsBound);
+            Debug.Log(serverSocket.LingerState);
+            Debug.Log(serverSocket.LocalEndPoint);
+
+            Debug.Log(serverSocket.NoDelay);
+            Debug.Log(serverSocket.ProtocolType);
+            Debug.Log(serverSocket.ReceiveBufferSize);
+            Debug.Log(serverSocket.ReceiveTimeout);
+            Debug.Log(serverSocket.RemoteEndPoint);
+            Debug.Log(serverSocket.SendBufferSize);
+            Debug.Log(serverSocket.SendTimeout);
+            Debug.Log(serverSocket.SocketType);
+            Debug.Log(serverSocket.Ttl);
+            Debug.Log(serverSocket.UseOnlyOverlappedIO);
+
+            //NotSupportedException: This protocol version is not supported.
+            //Debug.Log(serverSocket.DualMode);
+            //SocketException: 在 getsockopt 或 setsockopt 调用中指定的一个未知的、无效的或不受支持的选项或层次。
+            //Debug.Log(serverSocket.EnableBroadcast);
+            //SocketException: 在 getsockopt 或 setsockopt 调用中指定的一个未知的、无效的或不受支持的选项或层次。
+            //Debug.Log(serverSocket.MulticastLoopback);
         }
     }
 }

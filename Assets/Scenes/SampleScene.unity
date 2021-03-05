@@ -505,7 +505,7 @@ MonoBehaviour:
   tcp_one: {fileID: 1235912515}
   infoText: {fileID: 1234473490}
   str: 
-  httpType: 1
+  httpType: 0
 --- !u!114 &1235912514
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -520,10 +520,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_ip: 127.0.0.1
   m_port: 8080
-  isRunning: 0
   clientNum: 10
+  cs: []
   socketType: 1
   addressFamily: 2
+  isFinished: 0
 --- !u!114 &1235912515
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -731,7 +732,7 @@ PrefabInstance:
     - target: {fileID: 8584739632469765706, guid: dd8348bbabdf64c429bff666f8f41da7,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -0.0006644866
+      value: 0.0014298162
       objectReference: {fileID: 0}
     - target: {fileID: 8584739632469765706, guid: dd8348bbabdf64c429bff666f8f41da7,
         type: 3}
