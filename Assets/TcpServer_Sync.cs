@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using System.Threading;
 using UnityEngine;
 
-public class TcpServer : MonoBehaviour
+public class TcpServer_Sync : MonoBehaviour
 {
     ToolDelegate.String recvCB = null;
     byte[] sendData = new byte[1024];
@@ -20,8 +20,6 @@ public class TcpServer : MonoBehaviour
     public int clientNum = 10;
 
     public List<Client> cs;
-
-    Thread clientConnectedThread = null;
 
     public SocketType socketType = SocketType.Stream;
     public AddressFamily addressFamily = AddressFamily.InterNetwork;
@@ -51,43 +49,28 @@ public class TcpServer : MonoBehaviour
         cs.Capacity = clientNum;
 
         //创建监听线程
-        clientConnectedThread = new Thread(new ThreadStart(Receive));
-        //clientConnectedThread.IsBackground = true;
-        clientConnectedThread.Start();
+        serverSocket.BeginAccept(Accept_Callback, null);
 
         Invoke("【TCP服务器启动】 " + serverEP.ToString());
     }
 
-    private void Receive()
+    void Accept_Callback(IAsyncResult ar)
     {
-        while (!isFinished)
+        try
         {
-            try
+            if (serverSocket != null)
             {
-                if (cs.Count >= clientNum)
-                {
-                    Debug.LogError("已达连接上限");
-                    continue;
-                }
+                Socket c = serverSocket.EndAccept(ar);
 
-                //同步Accept，当关闭的时候会出现阻塞操作被中断的异常SocketException
-                Socket clientSocket = serverSocket.Accept();//这里还是有问题，晚点换成异步试下
+                cs.Add(new Client(c, Invoke));
 
-                cs.Add(new Client(clientSocket, recvCB));
+                serverSocket.BeginAccept(Accept_Callback, null);
             }
-            catch (SocketException e)
-            {
-                Debug.LogError("////" + e.ToString());
-            }
-            catch(ThreadAbortException e)
-            {
-                Debug.LogError("abort " + e.ToString());
-            }
-            catch (Exception e)
-            {
-                Debug.LogError(e.ToString());
-            }
-        }   
+        }
+        catch (Exception e)
+        {
+            Debug.Log("async accept " + e.Message);
+        }
     }
 
     void Invoke(string info)
@@ -103,7 +86,6 @@ public class TcpServer : MonoBehaviour
     public void Quit()
     {
         isFinished = true;
-        clientConnectedThread = null;
 
         if (serverSocket != null)
         {

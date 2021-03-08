@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Net.Sockets;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 
@@ -9,7 +6,8 @@ public enum HttpType
 {
     TCP_O = 0,
     TCP_M = 1,
-    UDP = 2
+    TCP_Sync = 2,
+    UDP = 3
 }
 
 public class Test : MonoBehaviour
@@ -19,6 +17,8 @@ public class Test : MonoBehaviour
     public TcpServer tcp = null;
 
     public TcpServer_One tcp_one = null;
+
+    public TcpServer_Sync tcp_sync = null;
 
     public Text infoText = null;
 
@@ -37,6 +37,9 @@ public class Test : MonoBehaviour
             case HttpType.TCP_M:
                 tcp.Init(Tools.GetLocalIP(true)[0], UpdateText);
                 break;
+            case HttpType.TCP_Sync:
+                tcp_sync.Init(Tools.GetLocalIP(true)[0], UpdateText);
+                break;
             case HttpType.UDP:
                 udp.Init(Tools.GetLocalIP(true)[0], UpdateText);
                 break;
@@ -51,22 +54,6 @@ public class Test : MonoBehaviour
         if (infoText.text != str)
         {
             infoText.text = str;
-        }
-
-        if (Input.GetKeyDown("u"))
-        {
-            if (udp != null)
-            {
-                udp.Send("test");
-            }
-        }
-
-        if (Input.GetKeyDown("o"))
-        {
-            if (tcp_one != null)
-            {
-                tcp_one.Send("test");
-            }
         }
     }
 
@@ -92,6 +79,11 @@ public class Test : MonoBehaviour
         if (tcp_one != null)
         {
             tcp_one.Quit();
+        }
+
+        if (tcp_sync != null)
+        {
+            tcp_sync.Quit();
         }
     }
 }

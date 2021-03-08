@@ -503,9 +503,10 @@ MonoBehaviour:
   udp: {fileID: 1235912512}
   tcp: {fileID: 1235912514}
   tcp_one: {fileID: 1235912515}
+  tcp_sync: {fileID: 1235912516}
   infoText: {fileID: 1234473490}
   str: 
-  httpType: 0
+  httpType: 2
 --- !u!114 &1235912514
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -520,7 +521,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_ip: 127.0.0.1
   m_port: 8080
-  clientNum: 10
+  clientNum: 1
   cs: []
   socketType: 1
   addressFamily: 2
@@ -539,6 +540,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_ip: 127.0.0.1
   m_port: 8080
+--- !u!114 &1235912516
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1235912510}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3480af41cbf27bd4ebccdd9bd2084a4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_ip: 127.0.0.1
+  m_port: 8080
+  clientNum: 10
+  cs: []
+  socketType: 1
+  addressFamily: 2
+  isFinished: 0
 --- !u!1 &1249261963
 GameObject:
   m_ObjectHideFlags: 0
@@ -732,7 +752,7 @@ PrefabInstance:
     - target: {fileID: 8584739632469765706, guid: dd8348bbabdf64c429bff666f8f41da7,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0.0014298162
+      value: 0.00138373
       objectReference: {fileID: 0}
     - target: {fileID: 8584739632469765706, guid: dd8348bbabdf64c429bff666f8f41da7,
         type: 3}

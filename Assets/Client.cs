@@ -7,11 +7,12 @@ using UnityEngine;
 public class Client
 {
     public string ip = "";
+    //public string Mip = "";
 
     byte[] sendData = new byte[1024];
     byte[] recvData = new byte[1024];
     public Thread recvMsgThread = null;
-    Socket clientSocket = null;
+    public Socket clientSocket = null;
     ToolDelegate.String cb_recv = null;
 
 
@@ -22,7 +23,10 @@ public class Client
     {
         clientSocket = _clientSocket;
         cb_recv = recvCB;
+        //客户端的ip
         ip = clientSocket.RemoteEndPoint.ToString();
+        //服务器的ip
+        //Mip = clientSocket.LocalEndPoint.ToString();
 
         Debug.LogWarning(ip);
 
@@ -60,10 +64,12 @@ public class Client
                 {
                     continue;
                 }
+                //获取到数据的量
                 if (clientSocket.Available <= 0)
                 {
                     continue;
                 }
+
                 int len = clientSocket.Receive(recvData);
                 if (len > 0)
                 {
@@ -74,6 +80,10 @@ public class Client
                         Send("1");
                     }
                 }
+            }
+            catch (ThreadAbortException e)
+            {
+                Debug.LogError("abort " + ip + e.ToString());
             }
             catch (Exception e)
             {
@@ -102,8 +112,10 @@ public class Client
                 clientSocket.Shutdown(SocketShutdown.Both);
                 clientSocket.Disconnect(false);
             }
+
             clientSocket.Close();
             clientSocket = null;
         }
+
     }
 }
